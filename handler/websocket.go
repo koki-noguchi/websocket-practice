@@ -65,5 +65,17 @@ func HandleWebsocket(c echo.Context) error {
 }
 
 func HandleMessage() {
-
+	for {
+		msg := <-broadcast
+		mu.Lock()
+		for client := range clients {
+			select {
+			case client.send <- msg:
+			default:
+				close(client.send)
+				delete(clients, client)
+			}
+		}
+		mu.Unlock()
+	}
 }
