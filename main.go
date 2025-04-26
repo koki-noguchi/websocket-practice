@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/koki-noguchi/websocket-practice/handler"
+	"github.com/koki-noguchi/websocket-practice/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log/slog"
@@ -9,6 +10,9 @@ import (
 )
 
 func main() {
+	logger.Init()
+	defer logger.SugarLogger.Sync()
+
 	e := echo.New()
 	e.Use(middleware.Recover())
 	e.GET("/", func(c echo.Context) error {
