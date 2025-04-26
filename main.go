@@ -3,12 +3,14 @@ package main
 import (
 	"github.com/koki-noguchi/websocket-practice/handler"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"log/slog"
 	"net/http"
 )
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.Recover())
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
