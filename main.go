@@ -11,11 +11,12 @@ import (
 
 func main() {
 	logger.Init()
-	defer logger.SugarLogger.Sync()
+	defer logger.SugaredLogger.Sync()
 
 	e := echo.New()
 	e.Use(middleware.Recover())
 	e.GET("/", func(c echo.Context) error {
+		logger.S().Info("hello world")
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 	e.GET("/ws", handler.HandleWebsocket)

@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	SugarLogger *zap.SugaredLogger
+	SugaredLogger *zap.SugaredLogger
 )
 
 func Init() {
@@ -36,5 +36,9 @@ func Init() {
 
 	rawLogger := zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
 
-	SugarLogger = rawLogger.Sugar()
+	SugaredLogger = rawLogger.Sugar()
+}
+
+func S() *zap.SugaredLogger {
+	return SugaredLogger
 }
