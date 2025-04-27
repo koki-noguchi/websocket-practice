@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+	"errors"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"log/slog"
@@ -56,7 +58,15 @@ func HandleWebsocket(c echo.Context) error {
 	for {
 		_, message, err := ws.ReadMessage()
 		if err != nil {
-			slog.Error("read error: " + err.Error())
+			if errors.Is(err, context.Canceled) {
+				slog.Info("context canceled")
+			} else if errors.Is(err, context.DeadlineExceeded) {
+				slog.Warn("context deadline exceeded")
+			} else if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+				slog.Info("connection closed")
+			} else {
+				slog.Error("read error: " + err.Error())
+			}
 			break
 		}
 		broadcast <- message
