@@ -1,0 +1,13 @@
+.chat-box {
+    width: 300px;
+    height: 400px;
+    border: 1px solid #ccc;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+.chat-message {
+    margin-bottom: 5px;
+}
