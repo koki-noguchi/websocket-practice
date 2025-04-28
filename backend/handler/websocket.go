@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/gorilla/websocket"
+	"github.com/koki-noguchi/websocket-practice/logger"
 	"github.com/labstack/echo/v4"
-	"log/slog"
 	"net/http"
 	"sync"
 )
@@ -47,7 +47,7 @@ func HandleWebsocket(c echo.Context) error {
 	go func(c *Client) {
 		for msg := range c.send {
 			if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				slog.Error("write error: " + err.Error())
+				logger.S().Error("write error: " + err.Error())
 				break
 			}
 		}
@@ -59,13 +59,13 @@ func HandleWebsocket(c echo.Context) error {
 		_, message, err := ws.ReadMessage()
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
-				slog.Info("context canceled")
+				logger.S().Info("context canceled")
 			} else if errors.Is(err, context.DeadlineExceeded) {
-				slog.Warn("context deadline exceeded")
+				logger.S().Warn("context deadline exceeded")
 			} else if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-				slog.Info("connection closed")
+				logger.S().Info("connection closed")
 			} else {
-				slog.Error("read error: " + err.Error())
+				logger.S().Error("read error: " + err.Error())
 			}
 			break
 		}

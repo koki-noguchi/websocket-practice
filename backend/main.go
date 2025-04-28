@@ -11,7 +11,7 @@ import (
 
 func main() {
 	logger.Init()
-	defer logger.SugaredLogger.Sync()
+	defer logger.S().Sync()
 
 	e := echo.New()
 	e.Use(middleware.Recover())
