@@ -22,6 +22,12 @@ type Message struct {
 	UserId string `json:"user_id"`
 }
 
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 func NewWebSocketHandler(roomService service.RoomServiceInterface) *WebSocketHandler {
 	return &WebSocketHandler{
 		RoomService: roomService,
@@ -29,8 +35,6 @@ func NewWebSocketHandler(roomService service.RoomServiceInterface) *WebSocketHan
 }
 
 func (h *WebSocketHandler) HandleWebsocket(c echo.Context) error {
-	// origin check
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	// websocketに昇格
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
