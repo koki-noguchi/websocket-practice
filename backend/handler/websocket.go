@@ -3,27 +3,20 @@ package handler
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/koki-noguchi/websocket-practice/app/model"
 	"github.com/koki-noguchi/websocket-practice/app/service"
 	"github.com/koki-noguchi/websocket-practice/logger"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"sync"
 )
 
 type WebSocketHandler struct {
 	RoomService service.RoomServiceInterface
 }
 
-type Client struct {
-	conn *websocket.Conn
-	send chan []byte
-}
-
 var upgrader = websocket.Upgrader{}
-var clients = make(map[*Client]bool)
-var broadcast = make(chan []byte)
-var mu sync.Mutex
 
 func NewWebSocketHandler(roomService service.RoomServiceInterface) *WebSocketHandler {
 	return &WebSocketHandler{
@@ -42,27 +35,21 @@ func (h *WebSocketHandler) HandleWebsocket(c echo.Context) error {
 	defer ws.Close()
 
 	// クライアントを定義
-	client := &Client{conn: ws, send: make(chan []byte, 256)}
-	mu.Lock()
-	clients[client] = true
-	mu.Unlock()
+	clientId := uuid.New().String()
+	client := model.NewClient(ws, clientId)
 
-	defer func() {
-		mu.Lock()
-		delete(clients, client)
-		mu.Unlock()
-		close(client.send)
-	}()
+	_, roomNameByte, err := ws.ReadMessage()
+	if err != nil {
+		return err
+	}
+	roomName := string(roomNameByte)
 
+	room := h.RoomService.GetOrCreateRoom(roomName)
+	room.Join(client)
+
+	defer room.Leave(client)
 	// クライアントにメッセージを送信
-	go func(c *Client) {
-		for msg := range c.send {
-			if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				logger.S().Error("write error: " + err.Error())
-				break
-			}
-		}
-	}(client)
+	go writePump(client)
 
 	// クライアントからのメッセージ受信
 	// ブロードキャストに入れる
@@ -80,23 +67,16 @@ func (h *WebSocketHandler) HandleWebsocket(c echo.Context) error {
 			}
 			break
 		}
-		broadcast <- message
+		room.Broadcast <- message
 	}
 	return nil
 }
 
-func HandleMessage() {
-	for {
-		msg := <-broadcast
-		mu.Lock()
-		for client := range clients {
-			select {
-			case client.send <- msg:
-			default:
-				close(client.send)
-				delete(clients, client)
-			}
+func writePump(c *model.Client) {
+	for msg := range c.Send {
+		if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			logger.S().Error("write error: " + err.Error())
+			break
 		}
-		mu.Unlock()
 	}
 }

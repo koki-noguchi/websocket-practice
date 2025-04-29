@@ -3,32 +3,46 @@ package model
 import "sync"
 
 type Room struct {
-	name      string
-	broadcast chan []byte
-	clients   map[*Client]bool
+	Name      string
+	Broadcast chan []byte
+	Clients   map[*Client]bool
 	mu        sync.RWMutex
 }
 
 func NewRoom(roomName string) *Room {
 	return &Room{
-		name:      roomName,
-		broadcast: make(chan []byte),
-		clients:   make(map[*Client]bool),
+		Name:      roomName,
+		Broadcast: make(chan []byte),
+		Clients:   make(map[*Client]bool),
 	}
 }
 
 func (r *Room) Start() {
 	for {
-		msg := <-r.broadcast
+		msg := <-r.Broadcast
 		r.mu.Lock()
-		for client := range r.clients {
+		for client := range r.Clients {
 			select {
-			case client.send <- msg:
+			case client.Send <- msg:
 			default:
-				delete(r.clients, client)
-				close(client.send)
+				delete(r.Clients, client)
+				close(client.Send)
 			}
 		}
 		r.mu.Unlock()
 	}
+}
+
+func (r *Room) Join(client *Client) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.Clients[client] = true
+	client.Room = r
+}
+
+func (r *Room) Leave(client *Client) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	delete(r.Clients, client)
+	close(client.Send)
 }

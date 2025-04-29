@@ -3,6 +3,7 @@ module github.com/koki-noguchi/websocket-practice
 go 1.24.2
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/labstack/echo/v4 v4.13.3
 	go.uber.org/zap v1.27.0

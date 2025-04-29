@@ -24,7 +24,6 @@ func main() {
 	webSocketHandler := handler.NewWebSocketHandler(roomService)
 
 	e.GET("/ws", webSocketHandler.HandleWebsocket)
-	go handler.HandleMessage()
 
 	if err := e.Start(":8080"); err != nil {
 		slog.Error(err.Error())
