@@ -3,12 +3,16 @@ import { useWebSocket } from '../hooks/useWebSocket';
 import ChatBox from '../components/ChatBox';
 import ChatInput from '../components/ChatInput';
 
-const ChatRoom = () => {
-    const { messages, sendMessage } = useWebSocket('ws://localhost:8080/ws');
+type Props = {
+    roomName: string;
+}
+
+const ChatRoom: React.FC<Props> = ({ roomName }) => {
+    const { messages, sendMessage } = useWebSocket(roomName);
 
     return (
         <div style={{ padding: 20 }}>
-            <h2>Chat Room</h2>
+            <h2>Chat Room: {roomName}</h2>
             <ChatBox messages={messages} />
             <ChatInput onSend={sendMessage} />
         </div>

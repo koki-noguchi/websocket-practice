@@ -1,26 +1,50 @@
 import { useEffect, useRef, useState } from 'react';
 import { Message } from '../types/Message';
 
-export const useWebSocket = (url: string) => {
+export const useWebSocket = (roomName: string) => {
     const ws = useRef<WebSocket | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
 
     useEffect(() => {
-        ws.current = new WebSocket(url);
+        const connect = () => {
+            if (ws.current && (ws.current.readyState === WebSocket.OPEN || ws.current.readyState === WebSocket.CONNECTING)) {
+                console.log("[WebSocket] Closing existing socket...");
+                ws.current.close();
+            }
 
-        ws.current.onmessage = (event) => {
-            const msg = { text: event.data };
-            setMessages(prev => [...prev, msg]);
+            const socket = new WebSocket(`ws://localhost:8080/ws`);
+            ws.current = socket;
+
+            socket.onopen = () => {
+                console.log("[WebSocket] Connected:", roomName);
+                socket.send(roomName);
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const data: Message = JSON.parse(event.data);
+                    setMessages((prev) => [...prev, data]);
+                } catch (err) {
+                    console.error("[WebSocket] Parse error", event.data);
+                }
+            };
+
+            socket.onclose = () => {
+                console.log("[WebSocket] Closed");
+            };
+
+            socket.onerror = (error) => {
+                console.error("[WebSocket] Error", error);
+            };
         };
 
-        ws.current.onerror = (err) => {
-            console.error('WebSocket error:', err);
-        };
+        connect();
 
         return () => {
+            console.log("[WebSocket] Cleanup");
             ws.current?.close();
         };
-    }, [url]);
+    }, [roomName]);
 
     const sendMessage = (text: string) => {
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {

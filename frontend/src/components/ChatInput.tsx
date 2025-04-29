@@ -8,7 +8,8 @@ type ChatInputProps = {
 const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
     const [input, setInput] = useState('');
 
-    const handleSend = () => {
+    const handleSend = (e?: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
+        if (e) e.preventDefault();
         if (input.trim() !== '') {
             onSend(input);
             setInput('');
@@ -17,20 +18,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
 
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
+            e.preventDefault();
             handleSend();
         }
     };
 
     return (
-        <div className="chat-input">
+        <form onSubmit={handleSend} className="chat-input">
             <input
+                type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Type a message..."
             />
-            <button onClick={handleSend}>Send</button>
-        </div>
+            <button type="submit">Send</button>
+        </form>
     );
 };
 
