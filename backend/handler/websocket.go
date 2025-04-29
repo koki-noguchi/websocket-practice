@@ -4,11 +4,16 @@ import (
 	"context"
 	"errors"
 	"github.com/gorilla/websocket"
+	"github.com/koki-noguchi/websocket-practice/app/service"
 	"github.com/koki-noguchi/websocket-practice/logger"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"sync"
 )
+
+type WebSocketHandler struct {
+	RoomService service.RoomServiceInterface
+}
 
 type Client struct {
 	conn *websocket.Conn
@@ -20,7 +25,13 @@ var clients = make(map[*Client]bool)
 var broadcast = make(chan []byte)
 var mu sync.Mutex
 
-func HandleWebsocket(c echo.Context) error {
+func NewWebSocketHandler(roomService service.RoomServiceInterface) *WebSocketHandler {
+	return &WebSocketHandler{
+		RoomService: roomService,
+	}
+}
+
+func (h *WebSocketHandler) HandleWebsocket(c echo.Context) error {
 	// origin check
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	// websocketに昇格

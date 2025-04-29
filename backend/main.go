@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/koki-noguchi/websocket-practice/app/service"
 	"github.com/koki-noguchi/websocket-practice/handler"
 	"github.com/koki-noguchi/websocket-practice/logger"
 	"github.com/labstack/echo/v4"
@@ -19,7 +20,10 @@ func main() {
 		logger.S().Info("hello world")
 		return c.String(http.StatusOK, "Hello, World!")
 	})
-	e.GET("/ws", handler.HandleWebsocket)
+	roomService := service.NewRoomService()
+	webSocketHandler := handler.NewWebSocketHandler(roomService)
+
+	e.GET("/ws", webSocketHandler.HandleWebsocket)
 	go handler.HandleMessage()
 
 	if err := e.Start(":8080"); err != nil {
