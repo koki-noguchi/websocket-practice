@@ -38,7 +38,7 @@ func (h *WebSocketHandler) HandleWebsocket(c echo.Context) error {
 	// websocketに昇格
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, "WebSocket Upgrade failed: "+err.Error())
 	}
 	defer ws.Close()
 
@@ -48,7 +48,8 @@ func (h *WebSocketHandler) HandleWebsocket(c echo.Context) error {
 
 	_, roomNameByte, err := ws.ReadMessage()
 	if err != nil {
-		return err
+		logger.S().Info("connection closed during room name read: " + err.Error())
+		return nil
 	}
 	roomName := string(roomNameByte)
 
