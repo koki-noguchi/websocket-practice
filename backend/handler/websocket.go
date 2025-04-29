@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/koki-noguchi/websocket-practice/app/model"
 	"github.com/koki-noguchi/websocket-practice/app/service"
+	"github.com/koki-noguchi/websocket-practice/helper"
 	"github.com/koki-noguchi/websocket-practice/logger"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -16,7 +17,10 @@ type WebSocketHandler struct {
 	RoomService service.RoomServiceInterface
 }
 
-var upgrader = websocket.Upgrader{}
+type Message struct {
+	Text   string `json:"text"`
+	UserId string `json:"user_id"`
+}
 
 func NewWebSocketHandler(roomService service.RoomServiceInterface) *WebSocketHandler {
 	return &WebSocketHandler{
@@ -67,7 +71,10 @@ func (h *WebSocketHandler) HandleWebsocket(c echo.Context) error {
 			}
 			break
 		}
-		room.Broadcast <- message
+		room.Broadcast <- model.BroadcastMessage{
+			Sender:  client,
+			Message: helper.MustMarshal(Message{Text: string(message)}),
+		}
 	}
 	return nil
 }

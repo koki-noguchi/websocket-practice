@@ -4,26 +4,31 @@ import "sync"
 
 type Room struct {
 	Name      string
-	Broadcast chan []byte
+	Broadcast chan BroadcastMessage
 	Clients   map[*Client]bool
 	mu        sync.RWMutex
+}
+
+type BroadcastMessage struct {
+	Sender  *Client
+	Message []byte
 }
 
 func NewRoom(roomName string) *Room {
 	return &Room{
 		Name:      roomName,
-		Broadcast: make(chan []byte),
+		Broadcast: make(chan BroadcastMessage),
 		Clients:   make(map[*Client]bool),
 	}
 }
 
 func (r *Room) Start() {
 	for {
-		msg := <-r.Broadcast
+		b := <-r.Broadcast
 		r.mu.Lock()
 		for client := range r.Clients {
 			select {
-			case client.Send <- msg:
+			case client.Send <- b.Message:
 			default:
 				delete(r.Clients, client)
 				close(client.Send)
