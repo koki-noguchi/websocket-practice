@@ -49,7 +49,7 @@ func (h *WebSocketHandler) HandleWebsocket(c echo.Context) error {
 	_, roomNameByte, err := ws.ReadMessage()
 	if err != nil {
 		logger.S().Info("connection closed during room name read: " + err.Error())
-		return nil
+		return err
 	}
 	roomName := string(roomNameByte)
 
